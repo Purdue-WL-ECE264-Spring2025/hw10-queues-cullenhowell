@@ -16,7 +16,7 @@ void insert_at_head(struct linked_list *list, size_t value)
   struct list_node * ptr = new_node(value);
   if (ptr == NULL) return;
   ptr -> next = list -> head;
-  list -> head = ptr; 
+  list -> head = ptr;
 }
 
 void insert_at_tail(struct linked_list *list, size_t value) 
@@ -29,7 +29,7 @@ void insert_at_tail(struct linked_list *list, size_t value)
     return;
   }
   struct list_node * current = list -> head;
-  while ((current -> next) != NULL) current = current -> next;
+  while ((current -> next) != NULL) {current = current -> next;}
   current -> next = ptr;
 }
 
@@ -53,9 +53,13 @@ size_t remove_from_tail(struct linked_list *list)
     list -> head = NULL;
     return temp_val;
   }
-  struct list_node * current = list -> head;
-  while ((current -> next -> next) != NULL) current = current -> next;
+  struct list_node *current = list->head;
+  if (current != NULL) 
+  {
+    while (current->next != NULL && current->next->next != NULL) {current = current->next;}
+  }
   size_t temp_val = current -> next -> value;
+  free(current->next);
   current -> next = NULL;
   return temp_val;
 }
@@ -69,7 +73,6 @@ void free_list(struct linked_list list)
     free(current);
     current = next;
   }
-  list.head = NULL;
 }
 
 // Utility function to help you debugging, do not modify

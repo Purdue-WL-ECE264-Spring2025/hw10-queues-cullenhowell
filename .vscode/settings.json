@@ -1,5 +1,6 @@
 {
     "files.associations": {
-        "tile_game.h": "c"
+        "tile_game.h": "c",
+        "type_traits": "c"
     }
 }

@@ -1,62 +1,103 @@
 #include "queue.h"
 #include "tile_game.h"
+#include "linked_list.h"
+#include <stdbool.h>
+#include <stdlib.h>
 
-// enqueue function: Add a serialized game state to the queue
+bool solution_reached(struct game_state state);
+bool present(struct linked_list *list, size_t);
+bool empty(struct linked_list *list);
+
 void enqueue(struct queue *q, struct game_state state) 
 {
-    // append serialized_state to queue.data (use linked list's insert_at_tail)
-
-    insert_at_tail(q, state);
-
+    uint64_t serialized_state = serialize(state);
+    insert_at_head(&(q->data), (size_t)serialized_state);
 }
 
-
-// dequeue function: Remove and return the deserialized game state at the head of the queue
 struct game_state dequeue(struct queue *q) 
 {
-    // if queue.data is empty:
-    //     return null // or an invalid game_state
-    // serialized_state = remove_from_head(queue.data)
-    // return deserialize(serialized_state)
-    
-    if (q -> data == NULL) return NULL;
-    return (struct game_state){0};
+    if (empty(&(q -> data)))
+    {
+        struct game_state empty_state = {{{0, 0, 0, 0}, 
+                                          {0, 0, 0, 0}, 
+                                          {0, 0, 0, 0}, 
+                                          {0, 0, 0, 0}}, 0, 0, 0};
+        return empty_state;
+    }
+    uint64_t serialized_state = remove_from_tail(&(q -> data));
+    return deserialize(serialized_state);
 }
 
-
-// number_of_moves function: Perform BFS to find the shortest path to solve the Tiles game
 int number_of_moves(struct game_state start) 
 {
-    // Create a queue and a set for visited states
-    queue = initialize queue
-    visited = initialize empty set
+    struct linked_list serials = {0};
+    struct queue q = {0};
+    struct game_state state = start;
+    if (!present(&serials, serialize(state))) 
+    {
+        insert_at_head(&serials, serialize(state));
+        enqueue(&q, state);
+    }
+    
+    while (q.data.head != NULL)
+    {
+        struct game_state current = dequeue(&q);
+        if (solution_reached(current))
+        {
+            free_list(serials);
+            free_list(q.data);
+            return current.num_steps;
+        }
 
-    // Add the start state to the queue and mark it as visited
-    enqueue(queue, start)
-    mark serialize(start) as visited
+        void (*moves[])(struct game_state *) = {move_up, move_down, move_left, move_right}; // Array of pointers
+        for (int i = 0; i < 4; i++)
+        {
+            struct game_state next_state = current;
+            moves[i](&next_state);
+            if (!present(&serials, serialize(next_state))) 
+            {
+                insert_at_head(&serials, serialize(next_state));
+                enqueue(&q, next_state);
+            }
+            if (solution_reached(next_state))
+            {
+                free_list(serials);
+                free_list(q.data);
+                return next_state.num_steps;
+            }
+        }
+    }
+    free_list(serials);
+    free_list(q.data);
+    return -1;
+}
 
-    while queue is not empty:
-        current_state = dequeue(queue)
+bool solution_reached(struct game_state state)
+{
+    int num = 1;
+    for (int i = 0; i < 4; i++)
+    {
+        for (int j = 0; j < 4; j++)
+        {
+            if ((num != 16 && state.tiles[i][j] != num) || (num == 16 && state.tiles[i][j] != 0)) {return false;}
+            num++;
+        }
+    }
+    return true;
+}
 
-        // If the current state is the goal, return the number of steps
-        if is_goal_state(current_state):
-            return current_state.num_steps
+bool present(struct linked_list *serials, size_t val)
+{
+    struct list_node * ptr = serials -> head;
+    while (ptr != NULL)
+    {
+        if ((ptr -> value == val)) return true;
+        ptr = ptr -> next;
+    }
+    return false;
+}
 
-        // Generate all possible next states (up, down, left, right)
-        for each move in [move_up, move_down, move_left, move_right]:
-            next_state = apply move to current_state
-            serialized_next_state = serialize(next_state)
-
-            // If the next state has not been visited
-            if serialized_next_state is not in visited:
-                mark serialized_next_state as visited
-                increment next_state.num_steps by 1
-                enqueue(queue, next_state)
-            end if
-        end for
-    end while
-
-    return -1 // Return -1 if no solution is found
-
-    return 0;
+bool empty(struct linked_list *list) 
+{
+    return list -> head == NULL;
 }
